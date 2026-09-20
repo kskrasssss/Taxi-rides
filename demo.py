@@ -29,6 +29,8 @@ from itertools import islice
 
 from src.trips.lazy import chunked, drop, record_stream, take, take_while
 
+from src.trips.calculator import Add, Div, Mul, Neg, Num, Pow, Sqrt, Sub, Sum, evaluate
+
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
@@ -208,6 +210,28 @@ def demo_task6_generators() -> None:
     gen = take(3, range(10))
     print("перший прохід:", list(gen), "| повторний for по вичерпаному:", list(gen))
 
+def demo_task7() -> None:
+    section("Завдання 7. Калькулятор виразів (match/case)")
+    cases = [
+        ("Num(0)", Num(0)),
+        ("Num(7)", Num(7)),
+        ("Neg(Num(5))", Neg(Num(5))),
+        ("(2 + 3) * 4", Mul(Add(Num(2), Num(3)), Num(4))),
+        ("10 - 4", Sub(Num(10), Num(4))),
+        ("9 / 3", Div(Num(9), Num(3))),
+        ("2 ** 10", Pow(Num(2), 10)),
+        ("sqrt(3*3 + 4*4)", Sqrt(Add(Mul(Num(3), Num(3)), Mul(Num(4), Num(4))))),
+        ("Sum(1, 2, 3)", Sum((Num(1), Num(2), Num(3)))),
+        ("Sum() порожня", Sum(())),
+        ("2 ** -1", Pow(Num(2), -1)),
+        ("sqrt(-4)", Sqrt(Num(-4))),
+        ("1 / 0", Div(Num(1), Num(0))),
+        ("1 / (2 - 2)", Div(Num(1), Sub(Num(2), Num(2)))),
+        ("42 (не вузол)", 42),
+    ]
+    for label, expr in cases:
+        show(label, lambda e=expr: evaluate(e))
+
 if __name__ == "__main__":
     main()
     demo_task2(lines)
@@ -218,3 +242,4 @@ if __name__ == "__main__":
     with open(DATA, encoding="utf-8") as f:
         demo_task6_pipeline(f, lines)
     demo_task6_generators()
+    demo_task7()
