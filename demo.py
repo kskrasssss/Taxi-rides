@@ -21,6 +21,11 @@ from src.trips.pipeline import run_comprehension, run_functional
 
 from src.trips.hof import curry3, km_predicate, make_predicate, to_km, to_miles
 
+from typing import Iterable, Iterator
+
+from src.trips.lazy import g_keep, g_normalize, g_parse
+from src.trips.pipeline import aggregate, run_functional
+
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
@@ -159,6 +164,24 @@ def demo_task5(lines: list[str]) -> None:
     base = run_functional(lines)
     print("конвеєр з curried-предикатом такий самий:",
           run_functional(lines, keep_fn=keep_curried) == base)
+
+def traced(lines: Iterable[str]) -> Iterator[str]:
+    """Показує, скільки рядків реально прочитано."""
+    for i, line in enumerate(lines, 1):
+        print(f"    [прочитано рядок {i}]")
+        yield line
+
+
+def demo_task6_pipeline(file: Iterable[str], lines: list[str]) -> None:
+    section("Завдання 6. Ліниві обчислення")
+    print("-- генераторний конвеєр по відкритому файлу --")
+    lazy_result = aggregate(g_keep(g_normalize(g_parse(file))))
+    print("результат:", lazy_result)
+    print("збігається із завданням 4:", lazy_result == run_functional(lines))
+
+    print("-- лінивість: беремо лише перший елемент --")
+    chain = g_keep(g_normalize(g_parse(traced(lines))))
+    print("  перший елемент:", next(chain))
 
 if __name__ == "__main__":
     main()
