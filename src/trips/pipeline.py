@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Iterable
-
+from trips.pipeline import normalize
 Rec = dict[str, Any]
 
 FIELDS = ("from_zone", "to_zone", "km", "minutes")
@@ -43,7 +43,7 @@ def process(lines: Iterable[str], now: float) -> Result:
 
 
 
-def normalize(rec: Rec) -> Rec:
+def normalize_plain(rec: Rec) -> Rec:
     return {
         **rec,
         "from_zone": rec["from_zone"].strip().lower(),

@@ -6,10 +6,13 @@ from pathlib import Path
 from typing import Callable
 
 from dataclasses import dataclass
+from src.trips.pipeline import normalize_plain, process
+from src.trips import legacy
+from src.trips.model import Record, add_km, to_record, with_to_zone
+from src.trips.hof import normalize
 
-from trips import legacy
-from trips.model import Record, add_km, to_record, with_to_zone
-from trips.pipeline import normalize, process
+from src.trips.hof import TRANSFORMS, compose, normalize_loop, pipe
+from src.trips.pipeline import normalize, normalize_plain, process
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -85,6 +88,23 @@ def demo_task2(lines: list[str]) -> None:
     print("Record як ключ dict:", {rec: "поїздка"}[same])
     show("set з MutableRecord", lambda: {MutableRecord("центр", 5)})   # TypeError
 
+def demo_task3(lines: list[str]) -> None:
+    section("Завдання 3. Функції вищого порядку")
+    print("-- compose / pipe --")
+    f = lambda x: x + 1
+    g = lambda x: x * 2
+    h = lambda x: x - 3
+    print("compose(f,g,h)(10):", compose(f, g, h)(10), "| f(g(h(10))):", f(g(h(10))))
+    print("pipe(f,g,h)(10):   ", pipe(f, g, h)(10), "| h(g(f(10))):", h(g(f(10))))
+
+    print("-- normalize --")
+    raw = process(lines, now=1000.0).records
+    print("pipe == loop == plain для всіх записів:",
+          all(normalize(r) == normalize_loop(r) == normalize_plain(r) for r in raw))
+    print("кількість перетворень у списку:", len(TRANSFORMS))
+    print("приклад:", normalize(raw[0]))
 
 if __name__ == "__main__":
     main()
+    demo_task2(lines)
+    demo_task3(lines)
