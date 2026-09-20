@@ -5,6 +5,7 @@ from typing import Any, Iterable
 from functools import reduce
 from typing import Callable
 from .hof import make_predicate, normalize   # вже є normalize; додай make_predicate
+from collections import Counter
 
 Rec = dict[str, Any]
 
@@ -68,3 +69,25 @@ def add_to_groups(acc: dict[str, int], rec: Rec) -> dict[str, int]:
 
 def aggregate(records: Iterable[Rec]) -> dict[str, int]:
     return reduce(add_to_groups, records, {})
+
+
+Predicate = Callable[[Rec], bool]
+
+
+def run_functional(lines: Iterable[str], keep_fn: Predicate = keep) -> dict[str, int]:
+    """Спосіб A: map / filter / reduce."""
+    parsed = filter(lambda rec: rec is not None, map(parse, lines))
+    normalized = map(normalize, parsed)
+    kept = filter(keep_fn, normalized)
+    return reduce(add_to_groups, kept, {})
+
+
+def run_comprehension(lines: Iterable[str], keep_fn: Predicate = keep) -> dict[str, int]:
+    """Спосіб B: спискові включення."""
+    parsed = [rec for line in lines if (rec := parse(line)) is not None]
+    normalized = [normalize(rec) for rec in parsed]
+    kept = [rec for rec in normalized if keep_fn(rec)]
+    totals: Counter[str] = Counter()
+    for rec in kept:
+        totals[rec["from_zone"]] += rec["km"]
+    return dict(totals)

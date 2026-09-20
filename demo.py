@@ -17,6 +17,8 @@ from src.trips.pipeline import normalize, normalize_plain, process
 from src.trips.hof import classify_km, make_predicate, make_running_total
 from src.trips.pipeline import aggregate, keep, normalize, process
 
+from src.trips.pipeline import run_comprehension, run_functional
+
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
@@ -129,8 +131,18 @@ def demo_task3_closures(lines: list[str]) -> None:
           "| збігаються:", last == sum(agg.values()))
     print("classify_km:", [(km, classify_km(km)) for km in (3, 5, 19, 20, 27)])
 
+def demo_task4(lines: list[str]) -> None:
+    section("Завдання 4. Конвеєр")
+    a = run_functional(lines)
+    b = run_comprehension(lines)
+    print("map/filter/reduce:", a)
+    print("включення:        ", b)
+    print("однакові:", a == b)
+    print("порожній вхід:", run_functional([]), run_comprehension([]))
+
 if __name__ == "__main__":
     main()
     demo_task2(lines)
     demo_task3(lines)
     demo_task3_closures(lines)
+    demo_task4(lines)
