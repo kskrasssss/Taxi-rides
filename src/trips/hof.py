@@ -3,6 +3,8 @@ from __future__ import annotations
 from functools import reduce
 from typing import Any, Callable
 
+import operator
+
 Rec = dict[str, Any]
 Func = Callable[[Any], Any]
 
@@ -51,3 +53,26 @@ def normalize_loop(rec: Rec) -> Rec:
     for transform in TRANSFORMS:
         rec = transform(rec)
     return rec
+
+
+def make_predicate(field: str, op: str, value: Any) -> Callable[[Rec], bool]:
+    """Замикає field, op, value; повертає rec -> op(rec[field], value)."""
+    compare = getattr(operator, op)
+
+    def predicate(rec: Rec) -> bool:
+        return compare(rec[field], value)
+    return predicate
+
+
+def make_running_total() -> Callable[[float], float]:
+    total = 0
+
+    def add(x: float) -> float:
+        nonlocal total          # змінюємо змінну зовнішньої функції
+        total += x
+        return total
+    return add
+
+
+# lambda з тернарним виразом (3.4)
+classify_km = lambda km: "мало" if km < 5 else "звичайно" if km < 20 else "багато"  # noqa: E731

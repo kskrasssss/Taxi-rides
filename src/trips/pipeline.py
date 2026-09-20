@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Iterable
-from trips.pipeline import normalize
+from functools import reduce
+from typing import Callable
+from .hof import make_predicate, normalize   # вже є normalize; додай make_predicate
+
 Rec = dict[str, Any]
 
 FIELDS = ("from_zone", "to_zone", "km", "minutes")
@@ -51,3 +54,17 @@ def normalize_plain(rec: Rec) -> Rec:
         "km": int(rec["km"]),
         "minutes": int(rec["minutes"]),
     }
+
+THRESHOLD = 5
+
+keep: Callable[[Rec], bool] = make_predicate("km", "ge", THRESHOLD)
+
+
+def add_to_groups(acc: dict[str, int], rec: Rec) -> dict[str, int]:
+    """Чиста версія: повертає новий словник, acc не мутує."""
+    key = rec["from_zone"]
+    return {**acc, key: acc.get(key, 0) + rec["km"]}
+
+
+def aggregate(records: Iterable[Rec]) -> dict[str, int]:
+    return reduce(add_to_groups, records, {})

@@ -14,6 +14,9 @@ from src.trips.hof import normalize
 from src.trips.hof import TRANSFORMS, compose, normalize_loop, pipe
 from src.trips.pipeline import normalize, normalize_plain, process
 
+from src.trips.hof import classify_km, make_predicate, make_running_total
+from src.trips.pipeline import aggregate, keep, normalize, process
+
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
@@ -104,7 +107,30 @@ def demo_task3(lines: list[str]) -> None:
     print("кількість перетворень у списку:", len(TRANSFORMS))
     print("приклад:", normalize(raw[0]))
 
+def demo_task3_closures(lines: list[str]) -> None:
+    print("\n-- замикання --")
+    records = [normalize(r) for r in process(lines, now=1000.0).records]
+
+    ge5 = make_predicate("km", "ge", 5)
+    is_center = make_predicate("from_zone", "eq", "центр")
+    print("km >= 5:", sum(map(ge5, records)), "із", len(records))
+    print("km записів із from_zone == 'центр':", [r["km"] for r in records if is_center(r)])
+
+    a, b = make_running_total(), make_running_total()
+    print("a(10), a(5):", a(10), a(5), "| b(1):", b(1), "(суми незалежні)")
+
+    kept = [r for r in records if keep(r)]
+    total = make_running_total()
+    last = 0
+    for rec in kept:
+        last = total(rec["km"])
+    agg = aggregate(kept)
+    print("running total:", last, "| сума aggregate:", sum(agg.values()),
+          "| збігаються:", last == sum(agg.values()))
+    print("classify_km:", [(km, classify_km(km)) for km in (3, 5, 19, 20, 27)])
+
 if __name__ == "__main__":
     main()
     demo_task2(lines)
     demo_task3(lines)
+    demo_task3_closures(lines)
