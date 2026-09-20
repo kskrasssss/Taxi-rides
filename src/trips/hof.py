@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from functools import reduce
 from typing import Any, Callable
-
+from functools import partial, reduce
 import operator
 
 Rec = dict[str, Any]
@@ -76,3 +75,24 @@ def make_running_total() -> Callable[[float], float]:
 
 # lambda з тернарним виразом (3.4)
 classify_km = lambda km: "мало" if km < 5 else "звичайно" if km < 20 else "багато"  # noqa: E731
+
+def scale(factor: float, value: float) -> float:
+    return round(value * factor, 2)
+
+
+to_km = partial(scale, 1.609344)      # милі -> км
+to_miles = partial(scale, 0.621371)   # км -> милі
+
+# фіксуємо перші два аргументи, лишається задати поріг
+km_predicate = partial(make_predicate, "km", "ge")
+
+
+def curry3(f: Callable[..., Any]) -> Callable[[Any], Callable[[Any], Callable[[Any], Any]]]:
+    """curry3(f)(a)(b)(c) == f(a, b, c)."""
+    def step1(a: Any) -> Callable[[Any], Callable[[Any], Any]]:
+        def step2(b: Any) -> Callable[[Any], Any]:
+            def step3(c: Any) -> Any:
+                return f(a, b, c)
+            return step3
+        return step2
+    return step1

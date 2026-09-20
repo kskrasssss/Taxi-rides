@@ -19,6 +19,8 @@ from src.trips.pipeline import aggregate, keep, normalize, process
 
 from src.trips.pipeline import run_comprehension, run_functional
 
+from src.trips.hof import curry3, km_predicate, make_predicate, to_km, to_miles
+
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
@@ -140,9 +142,28 @@ def demo_task4(lines: list[str]) -> None:
     print("однакові:", a == b)
     print("порожній вхід:", run_functional([]), run_comprehension([]))
 
+def demo_task5(lines: list[str]) -> None:
+    section("Завдання 5. partial і каррирування")
+    print("to_km(100):", to_km(100), "| to_miles(100):", to_miles(100),
+          "| різні:", to_km(100) != to_miles(100))
+
+    add3 = lambda a, b, c: a + b + c
+    print("curry3(add3)(1)(2)(3) == add3(1,2,3):", curry3(add3)(1)(2)(3) == add3(1, 2, 3))
+    print("curry3(add3)(1) — функція:", callable(curry3(add3)(1)))
+
+    keep_partial = km_predicate(5)
+    keep_curried = curry3(make_predicate)("km")("ge")(5)
+    records = [normalize(r) for r in process(lines, now=1000.0).records]
+    print("partial == keep:", [keep_partial(r) for r in records] == [keep(r) for r in records])
+    print("curried == keep:", [keep_curried(r) for r in records] == [keep(r) for r in records])
+    base = run_functional(lines)
+    print("конвеєр з curried-предикатом такий самий:",
+          run_functional(lines, keep_fn=keep_curried) == base)
+
 if __name__ == "__main__":
     main()
     demo_task2(lines)
     demo_task3(lines)
     demo_task3_closures(lines)
     demo_task4(lines)
+    demo_task5(lines)
