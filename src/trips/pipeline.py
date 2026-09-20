@@ -40,3 +40,14 @@ def process(lines: Iterable[str], now: float) -> Result:
     parsed = [parse(line) for line in lines]
     good = tuple({**rec, "received_at": now} for rec in parsed if rec is not None)
     return Result(records=good, errors=sum(rec is None for rec in parsed))
+
+
+
+def normalize(rec: Rec) -> Rec:
+    return {
+        **rec,
+        "from_zone": rec["from_zone"].strip().lower(),
+        "to_zone": rec["to_zone"].strip(),
+        "km": int(rec["km"]),
+        "minutes": int(rec["minutes"]),
+    }

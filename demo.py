@@ -5,10 +5,14 @@ import time
 from pathlib import Path
 from typing import Callable
 
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+from dataclasses import dataclass
 
 from trips import legacy
-from trips.pipeline import process
+from trips.model import Record, add_km, to_record, with_to_zone
+from trips.pipeline import normalize, process
+
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
 
 DATA = Path(__file__).parent / "data" / "trips.txt"
 EXPECTED_ERRORS = 6   # скільки некоректних рядків у data/trips.txt
@@ -55,6 +59,31 @@ def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # щоб кирилиця не ламалась у консолі Windows
     lines = read_lines()          # введення-виведення лишається тут
     demo_task1(lines)
+
+@dataclass                      # без frozen -> eq=True -> __hash__ = None
+class MutableRecord:
+    from_zone: str
+    km: int
+
+
+def demo_task2(lines: list[str]) -> None:
+    section("Завдання 2. Незмінний Record")
+    raw = process(lines, now=1000.0).records[0]
+    rec = to_record(normalize(raw))
+    print("record:", rec)
+
+    show("rec.km = 99", lambda: setattr(rec, "km", 99))   # FrozenInstanceError
+
+    bigger = add_km(rec, 10)
+    moved = with_to_zone(rec, "Печерськ")
+    print("add_km ->", bigger)
+    print("with_to_zone ->", moved)
+    print("оригінал не змінився:", rec, "| bigger is rec:", bigger is rec)
+
+    same = to_record(normalize(raw))
+    print("set із двох рівних Record, розмір:", len({rec, same}))
+    print("Record як ключ dict:", {rec: "поїздка"}[same])
+    show("set з MutableRecord", lambda: {MutableRecord("центр", 5)})   # TypeError
 
 
 if __name__ == "__main__":
