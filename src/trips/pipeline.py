@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Iterable
 
 Rec = dict[str, Any]
 
@@ -26,3 +27,16 @@ def parse(line: str) -> Rec | None:
     if not (_is_int(km) and _is_int(minutes)):
         return None
     return dict(zip(FIELDS, parts))  # значення «сирі», нормалізація окремо
+
+
+@dataclass(frozen=True)
+class Result:
+    records: tuple[Rec, ...]
+    errors: int
+
+
+def process(lines: Iterable[str], now: float) -> Result:
+    """Чиста функція: нічого не відкриває, не друкує, не читає час."""
+    parsed = [parse(line) for line in lines]
+    good = tuple({**rec, "received_at": now} for rec in parsed if rec is not None)
+    return Result(records=good, errors=sum(rec is None for rec in parsed))
