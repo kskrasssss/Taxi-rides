@@ -25,6 +25,9 @@ from typing import Iterable, Iterator
 
 from src.trips.lazy import g_keep, g_normalize, g_parse
 from src.trips.pipeline import aggregate, run_functional
+from itertools import islice
+
+from src.trips.lazy import chunked, drop, record_stream, take, take_while
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -183,6 +186,28 @@ def demo_task6_pipeline(file: Iterable[str], lines: list[str]) -> None:
     chain = g_keep(g_normalize(g_parse(traced(lines))))
     print("  перший елемент:", next(chain))
 
+def demo_task6_generators() -> None:
+    print("\n-- нескінченний потік --")
+    print("islice(record_stream(), 5):")
+    for rec in islice(record_stream(), 5):
+        print("  ", rec)
+    filtered = g_keep(g_normalize(record_stream()))
+    print("islice(g_keep(g_normalize(record_stream())), 5):")
+    for rec in islice(filtered, 5):
+        print("  ", rec)
+    # list(record_stream()) зациклився б: потік не має кінця
+
+    print("\n-- власні генератори (без itertools) --")
+    print("take(3, range(10)):", list(take(3, range(10))))
+    print("drop(3, range(6)):", list(drop(3, range(6))))
+    print("take_while(<4):", list(take_while(lambda x: x < 4, range(10))))
+    print("chunked(2, range(5)):", list(chunked(2, range(5))))
+    print("take(3) із нескінченного конвеєра:",
+          [r["km"] for r in take(3, g_keep(g_normalize(record_stream())))])
+
+    gen = take(3, range(10))
+    print("перший прохід:", list(gen), "| повторний for по вичерпаному:", list(gen))
+
 if __name__ == "__main__":
     main()
     demo_task2(lines)
@@ -190,3 +215,6 @@ if __name__ == "__main__":
     demo_task3_closures(lines)
     demo_task4(lines)
     demo_task5(lines)
+    with open(DATA, encoding="utf-8") as f:
+        demo_task6_pipeline(f, lines)
+    demo_task6_generators()
