@@ -6,6 +6,7 @@ from typing import Any
 
 @dataclass(frozen=True, slots=True)
 class Record:
+    # незмінний, типізований запис — та сама сутність, що й Rec (dict), тільки в іншій формі (завд. 2)
     from_zone: str
     to_zone: str
     km: int
@@ -14,6 +15,7 @@ class Record:
 
 
 def to_record(d: dict[str, Any]) -> Record:
+    # перетворює НОРМАЛІЗОВАНИЙ словник (уже з received_at) на Record
     return Record(
         from_zone=d["from_zone"],
         to_zone=d["to_zone"],
@@ -24,10 +26,9 @@ def to_record(d: dict[str, Any]) -> Record:
 
 
 def add_km(rec: Record, delta: int) -> Record:
-    """Новий запис зі зміненим числовим полем."""
+    # dataclasses.replace створює НОВИЙ Record із заміненим одним полем, старий rec НЕ змінюється
     return replace(rec, km=rec.km + delta)
 
 
 def with_to_zone(rec: Record, zone: str) -> Record:
-    """Новий запис зі зміненим рядковим полем."""
     return replace(rec, to_zone=zone)

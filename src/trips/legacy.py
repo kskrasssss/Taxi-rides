@@ -3,17 +3,18 @@ import time
 
 from .pipeline import parse
 
-records = []   # глобальний стан
-errors = 0     # глобальний стан
+records = []   # ефект №1: глобальний стан — накопичується між викликами load(), і це погано
+errors = 0     # ефект №2: те саме
 
 
 def load(path):
-    global errors
-    for line in open(path, encoding="utf-8"):   # ефект: відкриття файлу
-        print("читаю:", line.rstrip())           # ефект: вивід
+    global errors   # без цього рядка errors += 1 нижче створило б ЛОКАЛЬНУ змінну замість зміни глобальної
+    for line in open(path, encoding="utf-8"):   # ефект №3: відкриття файлу прямо тут, усередині логіки обробки
+        print("читаю:", line.rstrip())           # ефект №4: вивід у консоль, змішаний з обробкою
         rec = parse(line)
         if rec is None:
-            errors += 1                          # ефект: зміна глобальної змінної
+            errors += 1                          # ефект №5: мутація глобальної змінної
             continue
-        rec["received_at"] = time.time()         # ефект: недетермінованість
-        records.append(rec)                      # ефект: зміна глобальної змінної
+        rec["received_at"] = time.time()         # ефект №6: недетермінованість — щоразу різний результат
+        records.append(rec)                      # ефект №7: мутація глобального списку
+    # цей файл лишений НАВМИСНЕ поганим — показує, з чого стартувало завдання 1, до рефакторингу в pipeline.py
